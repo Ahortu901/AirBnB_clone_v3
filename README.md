@@ -1,4 +1,4 @@
-# <img src="https://www.holbertonschool.com/assets/holberton-logo-simplified-71b02868461c07d54553e4a7cc05d1926681a6755cc19030b0458f2d70ae9909.png" width="30"> AirBnB Clone V.3 - RESTful API
+# AirBnB Clone V.3 - RESTful API
 
 # AirBnB Clone - The Console :computer:
 The console is the first segment of the AirBnB project at ALx Africa Software Engineering Program that will collectively cover fundamental concepts of higher level programming. The goal of AirBnB project is to eventually deploy our server a simple copy of the AirBnB Website(HBnB). A command interpreter is created in this segment to manage objects for the AirBnB(HBnB) website.
@@ -10,7 +10,7 @@ The console is the first segment of the AirBnB project at ALx Africa Software En
 * Update attributes of an object
 * Destroy an object
 
-## Table of Content:man:
+## Table of Content:pager:
 * [Environment](#environment)
 * [Installation](#installation)
 * [File Descriptions](#file-descriptions)
