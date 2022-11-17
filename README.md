@@ -136,9 +136,10 @@ TestBaseModel class:
 No known bugs at this time. 
 
 ## Authors :black_nib:
-Ahortu Derrick - [Github](https://github.com/Ahortu901) 
-Williams Osei Prempeh - [Github](https://github.com/NANA-PREMPEH)
+- Ahortu Derrick - [Github](https://github.com/Ahortu901)
 
-First part of Airbnb: Ahortu Victor Duncan - [Github](https://github.com/victor-duncan)
+- Williams Osei Prempeh - [Github](https://github.com/NANA-PREMPEH)
+
+- First part of Airbnb: Ahortu Victor Duncan - [Github](https://github.com/victor-duncan)
 ## License
 Public Domain. No copy write protection. 
