@@ -1,93 +1,95 @@
 #!/usr/bin/python3
-"""  place RestFul API """
-from flask import Blueprint, jsonify, abort, request
-from models import storage
+""" objects that handle all default RestFul API actions for Place - Amenity """
 from models.place import Place
-from models.review import Review
-import json
+from models.amenity import Amenity
+from models import storage
+from api.v1.views import app_views
+from os import environ
+from flask import abort, jsonify, make_response, request
+from flasgger.utils import swag_from
 
 
-def init_places_reviews():
-    from api.v1.views import app_views
+@app_views.route('places/<place_id>/amenities', methods=['GET'],
+                 strict_slashes=False)
+@swag_from('documentation/place_amenity/get_places_amenities.yml',
+           methods=['GET'])
+def get_place_amenities(place_id):
+    """
+    Retrieves the list of all Amenity objects of a Place
+    """
+    place = storage.get(Place, place_id)
 
-    @app_views.route(
-                    '/places/<place_id>/reviews',
-                    methods=['GET'], strict_slashes=False)
-    def get_reviews_by_place(place_id=None):
-        """ Get reviews by place """
-        place = storage.get("Place", place_id)
-        if place is None:
+    if not place:
+        abort(404)
+
+    if environ.get('HBNB_TYPE_STORAGE') == "db":
+        amenities = [amenity.to_dict() for amenity in place.amenities]
+    else:
+        amenities = [storage.get(Amenity, amenity_id).to_dict()
+                     for amenity_id in place.amenity_ids]
+
+    return jsonify(amenities)
+
+
+@app_views.route('/places/<place_id>/amenities/<amenity_id>',
+                 methods=['DELETE'], strict_slashes=False)
+@swag_from('documentation/place_amenity/delete_place_amenities.yml',
+           methods=['DELETE'])
+def delete_place_amenity(place_id, amenity_id):
+    """
+    Deletes a Amenity object of a Place
+    """
+    place = storage.get(Place, place_id)
+
+    if not place:
+        abort(404)
+
+    amenity = storage.get(Amenity, amenity_id)
+
+    if not amenity:
+        abort(404)
+
+    if environ.get('HBNB_TYPE_STORAGE') == "db":
+        if amenity not in place.amenities:
             abort(404)
-        reviews = []
-        for review in place.reviews:
-            reviews.append(review.to_dict())
-        return jsonify(reviews)
-
-    @app_views.route(
-                    '/reviews/<review_id>',
-                    methods=['GET'],
-                    strict_slashes=False)
-    def get_review(review_id=None):
-        '''get review by id'''
-        review = storage.get("Review", review_id)
-        if review is None:
+        place.amenities.remove(amenity)
+    else:
+        if amenity_id not in place.amenity_ids:
             abort(404)
-        return jsonify(review.to_dict())
+        place.amenity_ids.remove(amenity_id)
 
-    @app_views.route(
-                    '/reviews/<review_id>',
-                    methods=['DELETE'],
-                    strict_slashes=False)
-    def delete_review(review_id=None):
-        '''delete a place by id'''
-        review = storage.get("Review", review_id)
-        if review is None:
-            abort(404)
-        storage.delete(review)
-        return jsonify({}), 200
+    storage.save()
+    return make_response(jsonify({}), 200)
 
-    @app_views.route(
-                    'places/<place_id>/reviews',
-                    methods=['POST'], strict_slashes=False)
-    def new_review(place_id=None):
-        '''create a new review'''
-        place = storage.get("Place", place_id)
-        if place is None:
-            abort(404)
-        if not request.json:
-            return jsonify({"error": "Not a JSON"}), 400
-        if 'user_id' not in request.json:
-            return jsonify({"error": "Missing user_id"}), 400
-        user = storage.get("User", request.json['user_id'])
-        if user is None:
-            abort(404)
-        if 'text' not in request.json:
-            return jsonify({"error": "Missing text"}), 400
-        review = Review(**request.json)
-        review.place_id = place_id
-        storage.new(review)
-        return jsonify(storage.get("Review", review.id).to_dict()), 201
 
-    @app_views.route(
-                    '/reviews/<review_id>',
-                    methods=['PUT'],
-                    strict_slashes=False
-                    )
-    def update_review(review_id=None):
-        '''update a place'''
-        review = storage.get("Review", review_id)
-        if review is None:
-            abort(404)
-        if not request.json:
-            return jsonify({"error": "Not a JSON"}), 400
+@app_views.route('/places/<place_id>/amenities/<amenity_id>', methods=['POST'],
+                 strict_slashes=False)
+@swag_from('documentation/place_amenity/post_place_amenities.yml',
+           methods=['POST'])
+def post_place_amenity(place_id, amenity_id):
+    """
+    Link a Amenity object to a Place
+    """
+    place = storage.get(Place, place_id)
 
-        for key, value in request.json.items():
-            if (
-                key == 'id' or key == 'user_id' or
-                key == 'place_id'
-            ):
-                pass
-            else:
-                setattr(review, key, value)
-        storage.save()
-        return jsonify(storage.get("Review", review.id).to_dict()), 200
+    if not place:
+        abort(404)
+
+    amenity = storage.get(Amenity, amenity_id)
+
+    if not amenity:
+        abort(404)
+
+    if environ.get('HBNB_TYPE_STORAGE') == "db":
+        if amenity in place.amenities:
+            return make_response(jsonify(amenity.to_dict()), 200)
+        else:
+            place.amenities.append(amenity)
+    else:
+        if amenity_id in place.amenity_ids:
+            return make_response(jsonify(amenity.to_dict()), 200)
+        else:
+            place.amenity_ids.append(amenity_id)
+
+    storage.save()
+    return make_response(jsonify(amenity.to_dict()), 201)
